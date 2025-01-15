@@ -1,4 +1,5 @@
 import { FC, ChangeEvent, FormEvent, useState } from 'react';
+import * as yup from 'yup';
 import { IconAt } from '@tabler/icons-react';
 import { Input } from '../Input/Input';
 import { SigninProps } from './Signin.types';
@@ -7,6 +8,14 @@ const initialSigninState = {
 	email: '',
 	password: '',
 };
+
+const signinSchema = yup.object().shape({
+	email: yup.string().email('Введите корректный email.').required('Email обязателен.'),
+	password: yup
+		.string()
+		.min(6, 'Пароль должен быть не менее 6 символов.')
+		.required('Пароль обязателен.'),
+});
 
 export const Signin: FC<SigninProps> = ({ onSubmit }) => {
 	const [inputs, setInputs] = useState(initialSigninState);
@@ -23,24 +32,27 @@ export const Signin: FC<SigninProps> = ({ onSubmit }) => {
 		});
 	};
 
-	const validateForm = () => {
-		const newErrors = {
-			email: /\S+@\S+\.\S+/.test(inputs.email) ? '' : 'Введите корректный email.',
-			password:
-				inputs.password.length >= 6
-					? ''
-					: 'Пароль должен быть не менее 6 символов.',
-		};
-
-		setErrors(newErrors);
-
-		return Object.values(newErrors).every((error) => error === '');
+	const validateForm = async () => {
+		try {
+			await signinSchema.validate(inputs, { abortEarly: false });
+			return true;
+		} catch (validationErrors) {
+			const newErrors = (validationErrors as yup.ValidationError).inner.reduce(
+				(acc, err) => ({
+					...acc,
+					[err.path || '']: err.message,
+				}),
+				{}
+			);
+			setErrors(newErrors as typeof initialSigninState);
+			return false;
+		}
 	};
 
-	const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
+	const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
 		event.preventDefault();
 
-		if (validateForm()) {
+		if (await validateForm()) {
 			onSubmit(inputs);
 			setInputs(initialSigninState);
 			setErrors(initialSigninState);

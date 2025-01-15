@@ -1,4 +1,5 @@
 import { useState, FC, ChangeEvent, FormEvent } from 'react';
+import * as yup from 'yup';
 import { IconAt } from '@tabler/icons-react';
 import { Input } from '../Input/Input';
 import { SignupProps } from './Signup.types';
@@ -11,6 +12,21 @@ const initialSignupState = {
 	password: '',
 	confirmPassword: '',
 };
+
+const signupSchema = yup.object().shape({
+	name: yup.string().required('Введите имя.'),
+	nickname: yup.string().required('Введите ник.'),
+	email: yup.string().email('Введите корректный email.').required('Email обязателен.'),
+	gender: yup.string().required('Выберите пол.'),
+	password: yup
+		.string()
+		.min(6, 'Пароль должен быть не менее 6 символов.')
+		.required('Введите пароль.'),
+	confirmPassword: yup
+		.string()
+		.oneOf([yup.ref('password')], 'Пароли не совпадают.')
+		.required('Подтвердите пароль.'),
+});
 
 export const Signup: FC<SignupProps> = ({ onSubmit }) => {
 	const [inputs, setInputs] = useState(initialSignupState);
@@ -28,25 +44,27 @@ export const Signup: FC<SignupProps> = ({ onSubmit }) => {
 		});
 	};
 
-	const validateForm = () => {
-		const newErrors = {
-			name: inputs.name ? '' : 'Введите имя.',
-			nickname: inputs.nickname ? '' : 'Введите ник.',
-			email: /\S+@\S+\.\S+/.test(inputs.email) ? '' : 'Введите корректный email.',
-			gender: inputs.gender ? '' : 'Выберите пол.',
-			password: inputs.password ? '' : 'Введите пароль.',
-			confirmPassword:
-				inputs.password === inputs.confirmPassword ? '' : 'Пароли не совпадают.',
-		};
-		setErrors(newErrors);
-
-		return Object.values(newErrors).every((error) => error === '');
+	const validateForm = async () => {
+		try {
+			await signupSchema.validate(inputs, { abortEarly: false });
+			return true;
+		} catch (validationErrors) {
+			const newErrors = (validationErrors as yup.ValidationError).inner.reduce(
+				(acc, err) => ({
+					...acc,
+					[err.path || '']: err.message,
+				}),
+				{}
+			);
+			setErrors(newErrors as typeof initialSignupState);
+			return false;
+		}
 	};
 
-	const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
+	const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
 		event.preventDefault();
 
-		if (validateForm()) {
+		if (await validateForm()) {
 			onSubmit(inputs);
 			setInputs(initialSignupState);
 			setErrors(initialSignupState);

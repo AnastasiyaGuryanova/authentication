@@ -14,6 +14,9 @@ export const App: FC = () => {
 		console.log('Signup form submitted:', formData);
 	};
 
+	const switchToSignup = () => setIsSignin(false);
+	const switchToSignin = () => setIsSignin(true);
+
 	return (
 		<div className="app">
 			{isSignin ? (
@@ -22,7 +25,7 @@ export const App: FC = () => {
 					<Signin onSubmit={handleSigninSubmit} />
 					<p>
 						Нет аккаунта?{' '}
-						<span className="switch-link" onClick={() => setIsSignin(false)}>
+						<span className="switch-link" onClick={switchToSignup}>
 							Зарегистрироваться
 						</span>
 					</p>
@@ -33,7 +36,7 @@ export const App: FC = () => {
 					<Signup onSubmit={handleSignupSubmit} />
 					<p>
 						Уже есть аккаунт?{' '}
-						<span className="switch-link" onClick={() => setIsSignin(true)}>
+						<span className="switch-link" onClick={switchToSignin}>
 							Войти
 						</span>
 					</p>

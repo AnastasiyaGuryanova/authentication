@@ -4,7 +4,7 @@ export interface InputProps {
 	label?: string;
 	description?: string;
 	error?: string;
-	variant?: 'default' | 'filled' | 'unstyled';
+	variant?: 'filled' | 'unstyled';
 	radius?: 'xs' | 'sm' | 'md' | 'lg' | 'xl';
 	size?: 'xs' | 'sm' | 'md' | 'lg' | 'xl';
 	withAsterisk?: boolean;
